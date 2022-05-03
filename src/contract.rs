@@ -1,7 +1,6 @@
 use cosmwasm_std::{
     entry_point, to_binary, Coin, Deps, DepsMut, Env, MessageInfo, Response,from_binary,Binary,
-    StdResult, Uint128,CosmosMsg,WasmMsg,Decimal,BankMsg,Order,Pair, Record
-};
+    StdResult, Uint128,CosmosMsg,WasmMsg,Decimal,BankMsg,Order};
 
 use cw2::set_contract_version;
 use cw20::{ Cw20ExecuteMsg,Cw20ReceiveMsg};
@@ -9,9 +8,9 @@ use cw721::{Cw721ReceiveMsg, Cw721ExecuteMsg};
 
 use crate::error::{ContractError};
 use crate::msg::{ ExecuteMsg, InstantiateMsg, QueryMsg,SellNft, BuyNft};
-use crate::state::{State,CONFIG,Offering, OFFERINGS,Asset,UserInfo, MEMBERS};
+use crate::state::{State,CONFIG,Offering, OFFERINGS,UserInfo, MEMBERS,Asset};
 use crate::package::{OfferingsResponse,QueryOfferingsResult};
-use std::str::from_utf8;
+
 
 const CONTRACT_NAME: &str = "Hope_Market_Place";
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -70,6 +69,10 @@ fn execute_receive_nft(
     }
 
     let msg:SellNft = from_binary(&rcv_msg.msg)?;
+
+    if msg.list_price.denom == "hope" && msg.list_price.amount < Uint128::new(1000000){
+        return Err(ContractError::InSufficientToken {  })
+    }
     
     state.offering_id = state.offering_id + 1;
     CONFIG.save(deps.storage, &state)?;
@@ -533,7 +536,7 @@ mod tests {
         let cw721_msg = SellNft{
             list_price:Asset{
                 denom:"hope".to_string(),
-                amount:Uint128::new(10)
+                amount:Uint128::new(1000000)
             }
         };
 
@@ -543,7 +546,7 @@ mod tests {
             token_id:"Hope.3".to_string(),
             msg:to_binary(&cw721_msg).unwrap()
         });
-        let res = execute(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
+        execute(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
 
         let nft_market_datas = query_get_offerings(deps.as_ref()).unwrap();
         assert_eq!(nft_market_datas.offerings,
@@ -562,7 +565,7 @@ mod tests {
                     seller : "owner3".to_string(),
                     list_price:Asset { 
                         denom: "hope".to_string(),
-                        amount: Uint128::new(10) 
+                        amount: Uint128::new(1000000) 
                     }
                 }
             ]
@@ -577,7 +580,7 @@ mod tests {
         let info = mock_info("token_address1", &[]);
         let msg = ExecuteMsg::Receive(Cw20ReceiveMsg{
             sender:"buyer".to_string(),
-            amount:Uint128::new(1000),
+            amount:Uint128::new(1000000),
             msg:to_binary(&cw20_msg).unwrap()
         });
         let res = execute(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
@@ -595,7 +598,7 @@ mod tests {
             funds: vec![],
             msg: to_binary(&Cw20ExecuteMsg::Transfer {
                     recipient: "owner3".to_string(),
-                    amount:Uint128::new(970)
+                    amount:Uint128::new(970000)
             }).unwrap(),
         }));
 
@@ -604,7 +607,7 @@ mod tests {
             funds: vec![],
             msg: to_binary(&Cw20ExecuteMsg::Transfer {
                     recipient: "admin1".to_string(),
-                    amount:Uint128::new(9)
+                    amount:Uint128::new(9000)
             }).unwrap(),
         }));
 
@@ -614,7 +617,7 @@ mod tests {
             funds: vec![],
             msg: to_binary(&Cw20ExecuteMsg::Transfer {
                     recipient: "admin2".to_string(),
-                    amount:Uint128::new(21)
+                    amount:Uint128::new(21000)
             }).unwrap(),
         }));
 

@@ -8,6 +8,9 @@ pub enum ContractError {
 
     #[error("Unauthorized")]
     Unauthorized {},
+   
+    #[error("Not enough token")]
+    InSufficientToken {},
 
     #[error("Wrong Portion Error")]
     WrongPortionError {},
