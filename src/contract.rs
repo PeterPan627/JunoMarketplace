@@ -426,7 +426,10 @@ mod tests {
             address:"admin2".to_string(),
             portion:Decimal::from_ratio(7 as u128, 10 as u128)
         }]);
-     
+        let nft_market_datas = query_get_offerings(deps.as_ref()).unwrap();
+        assert_eq!(nft_market_datas.offerings,
+            vec![]
+        );
         //Chage Portion
 
         let info = mock_info("owner", &[]);
