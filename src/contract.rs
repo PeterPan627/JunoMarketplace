@@ -115,6 +115,10 @@ fn execute_receive(
         return Err(ContractError::NotEnoughFunds  { })
     }
 
+    if off.list_price.amount < rcv_msg.amount{
+        return Err(ContractError::TooMuchFunds  { })
+    }
+
     OFFERINGS.remove( deps.storage, &msg.offering_id);
     let members = MEMBERS.load(deps.storage)?;
     
@@ -169,6 +173,10 @@ fn execute_buy_nft(
 
     if off.list_price.amount>amount{
         return Err(ContractError::NotEnoughFunds {  })
+    }
+
+    if off.list_price.amount<amount{
+        return Err(ContractError::TooMuchFunds {  })
     }
 
     OFFERINGS.remove( deps.storage, &offering_id);
@@ -459,7 +467,7 @@ mod tests {
         let cw721_msg = SellNft{
             list_price:Asset{
                 denom:"ujuno".to_string(),
-                amount:Uint128::new(2)
+                amount:Uint128::new(1000000)
             }
         };
 
@@ -489,7 +497,7 @@ mod tests {
                     seller : "owner1".to_string(),
                     list_price:Asset { 
                         denom: "ujuno".to_string(),
-                        amount: Uint128::new(2) 
+                        amount: Uint128::new(1000000) 
                     }
                 },
                 QueryOfferingsResult{
@@ -498,7 +506,7 @@ mod tests {
                     seller : "owner2".to_string(),
                     list_price:Asset { 
                         denom: "ujuno".to_string(),
-                        amount: Uint128::new(2) 
+                        amount: Uint128::new(1000000) 
                     }
                 }
             ]
@@ -528,7 +536,7 @@ mod tests {
                     seller : "owner2".to_string(),
                     list_price:Asset { 
                         denom: "ujuno".to_string(),
-                        amount: Uint128::new(2) 
+                        amount: Uint128::new(1000000) 
                     }
                 }
             ]
@@ -560,7 +568,7 @@ mod tests {
                     seller : "owner2".to_string(),
                     list_price:Asset { 
                         denom: "ujuno".to_string(),
-                        amount: Uint128::new(2) 
+                        amount: Uint128::new(1000000) 
                     }
                 }, QueryOfferingsResult{
                     id :"3".to_string(),
@@ -633,7 +641,7 @@ mod tests {
                     seller : "owner2".to_string(),
                     list_price:Asset { 
                         denom: "ujuno".to_string(),
-                        amount: Uint128::new(2) 
+                        amount: Uint128::new(1000000) 
                     }
                 }
             ]
@@ -643,7 +651,7 @@ mod tests {
 
         let info = mock_info("buyer2", &[Coin{
             denom:"ujuno".to_string(),
-            amount:Uint128::new(1000)
+            amount:Uint128::new(1000000)
         }]);
         let msg = ExecuteMsg::BuyNft { offering_id: "2".to_string() };
         let res = execute(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
@@ -660,21 +668,21 @@ mod tests {
                 to_address: "owner2".to_string(),
                 amount:vec![Coin{
                     denom:"ujuno".to_string(),
-                    amount:Uint128::new(970)
+                    amount:Uint128::new(970000)
                 }]
         }));
         assert_eq!(res.messages[2].msg,CosmosMsg::Bank(BankMsg::Send {
                 to_address: "admin1".to_string(),
                 amount:vec![Coin{
                     denom:"ujuno".to_string(),
-                    amount:Uint128::new(9)
+                    amount:Uint128::new(9000)
                 }]
         }));
         assert_eq!(res.messages[3].msg,CosmosMsg::Bank(BankMsg::Send {
                 to_address: "admin2".to_string(),
                 amount:vec![Coin{
                     denom:"ujuno".to_string(),
-                    amount:Uint128::new(21)
+                    amount:Uint128::new(21000)
                 }]
         }));
 

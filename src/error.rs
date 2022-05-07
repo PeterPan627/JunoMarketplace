@@ -30,6 +30,10 @@ pub enum ContractError {
     #[error("Not Enough Funds")]
     NotEnoughFunds {},
 
+    #[error("Too Much Funds")]
+    TooMuchFunds {},
+
+
     #[error("Escrow expired (end_height {end_height:?} end_time {end_time:?})")]
     Expired {
         end_height: Option<u64>,
