@@ -3,7 +3,7 @@ use cw20::Cw20ReceiveMsg;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use crate::state::{Asset,UserInfo};
-use cosmwasm_std::{Decimal};
+use cosmwasm_std::{Decimal, Uint128};
 use cw721::Cw721ReceiveMsg;
 
 
@@ -32,7 +32,11 @@ pub enum QueryMsg {
     /// Returns a human-readable representation of the arbiter.
     GetStateInfo {},
     GetOfferings{},
-    GetMembers{}
+    GetMembers{},
+    GetOfferingId{},
+    GetSaleHistory{token_id:String},
+    GetOfferingPage{id :Vec<String> },
+    GetTradingInfo{}
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
