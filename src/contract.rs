@@ -478,7 +478,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::GetTradingInfo { address} => to_binary(&query_get_trading(deps,address)?),
         QueryMsg::GetSaleHistory {address, token_id } => to_binary(&query_get_history(deps,address,token_id)?),
         QueryMsg::GetCollectionInfo { address } =>to_binary(&query_collection_info(deps,address)?),
-        QueryMsg::GetOfferingId { }=> to_binary(&query_get_ids(deps)?),
+        QueryMsg::GetOfferingId {address }=> to_binary(&query_get_ids(deps,address)?),
         QueryMsg::GetOfferingPage { id,address }  => to_binary(&query_get_offering(deps,id,address)?),
     }
 }
@@ -536,9 +536,10 @@ pub fn query_get_trading(deps:Deps,address:String) -> StdResult<PriceInfo>{
 // }
 
 
-pub fn query_get_ids(deps:Deps) -> StdResult<Vec<String>>{
+pub fn query_get_ids(deps:Deps,address: String) -> StdResult<Vec<String>>{
      let token_id:StdResult<Vec<String>>  = OFFERINGS
         .keys(deps.storage, None, None, Order::Ascending)
+        .filter(|keys|keys.as_ref().unwrap().0 == address.clone())
         .map(|keys|parse_keys(deps, keys))
         .collect();
     Ok(token_id?)
@@ -670,7 +671,7 @@ mod tests {
         royalty_portion:Decimal::from_ratio(5 as u128, 100 as u128)
      });
 
-     let ids =  query_get_ids(deps.as_ref()).unwrap();
+     let ids =  query_get_ids(deps.as_ref(),"hope1_address".to_string()).unwrap();
      assert_eq!(ids,vec!["1".to_string()]);
 
      let offerings = query_get_offering(deps.as_ref(),vec!["1".to_string()],"hope1_address".to_string()).unwrap();
@@ -722,7 +723,7 @@ mod tests {
                 }]
         }));
 
-        let ids =  query_get_ids(deps.as_ref()).unwrap();
+        let ids =  query_get_ids(deps.as_ref(),"hope1_address".to_string()).unwrap();
         let test_id:Vec<String> = vec![];
         assert_eq!(ids,test_id);
         
@@ -926,7 +927,7 @@ mod tests {
         }).unwrap(),
     }));      
 
-    let ids =  query_get_ids(deps.as_ref()).unwrap();
+    let ids =  query_get_ids(deps.as_ref(),"hope2_address".to_string()).unwrap();
     let test_id:Vec<String> = vec![];
     assert_eq!(ids,test_id);
 
@@ -957,8 +958,36 @@ mod tests {
      assert_eq!(trade_info,PriceInfo{
         total_juno:Uint128::new(0),
         total_hope:Uint128::new(0)
-     })
+     });
 
+      let cw721_msg = SellNft{
+            list_price:Asset{
+                denom:"ujuno".to_string(),
+                amount:Uint128::new(1000000)
+            }
+        };
+
+        let info = mock_info("hope1_address", &[]);
+        let msg = ExecuteMsg::ReceiveNft(Cw721ReceiveMsg{
+            sender:"owner1".to_string(),
+            token_id:"Hope.1".to_string(),
+            msg:to_binary(&cw721_msg).unwrap()
+        });
+      execute(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
+
+        let info = mock_info("hope2_address", &[]);
+        let msg = ExecuteMsg::ReceiveNft(Cw721ReceiveMsg{
+            sender:"owner1".to_string(),
+            token_id:"Hope.2".to_string(),
+            msg:to_binary(&cw721_msg).unwrap()
+        });
+      execute(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
+
+      let ids_1 =  query_get_ids(deps.as_ref(),"hope1_address".to_string()).unwrap();
+      let ids_2 =  query_get_ids(deps.as_ref(),"hope2_address".to_string()).unwrap(); 
+      
+      assert_eq!(ids_1,vec!["6"]);
+      assert_eq!(ids_2,vec!["1"])
     }
 }
     

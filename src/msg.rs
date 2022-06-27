@@ -33,7 +33,7 @@ pub enum QueryMsg {
     /// Returns a human-readable representation of the arbiter.
     GetStateInfo {},
     GetMembers{address:String},
-    GetOfferingId{},
+    GetOfferingId{address:String},
     GetSaleHistory{address:String,token_id:String},
     GetOfferingPage{id :Vec<String>,address:String },
     GetTradingInfo{address:String},
