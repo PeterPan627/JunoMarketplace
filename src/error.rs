@@ -33,12 +33,9 @@ pub enum ContractError {
     #[error("Too Much Funds")]
     TooMuchFunds {},
 
+    #[error("Wrong Collection")]
+    WrongCollection {},
 
-    #[error("Escrow expired (end_height {end_height:?} end_time {end_time:?})")]
-    Expired {
-        end_height: Option<u64>,
-        end_time: Option<u64>,
-    },
 
     #[error("Escrow not expired")]
     NotExpired {},
