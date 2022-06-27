@@ -1,6 +1,6 @@
 use cosmwasm_std::{
     entry_point, to_binary, Coin, Deps, DepsMut, Env, MessageInfo, Response,from_binary,Binary,
-    StdResult, Uint128,CosmosMsg,WasmMsg,Decimal,BankMsg,Order,Pair
+    StdResult, Uint128,CosmosMsg,WasmMsg,Decimal,BankMsg,Order
 };
 
 use cw2::set_contract_version;
@@ -10,7 +10,7 @@ use cw721::{Cw721ReceiveMsg, Cw721ExecuteMsg};
 use crate::error::{ContractError};
 use crate::msg::{ ExecuteMsg, InstantiateMsg, QueryMsg,SellNft, BuyNft};
 use crate::state::{State,CONFIG,Offering, OFFERINGS,Asset,UserInfo, MEMBERS,SALEHISTORY,PRICEINFO,SaleInfo,PriceInfo, COLLECTIONINFO, CollectionInfo};
-use crate::package::{OfferingsResponse,QueryOfferingsResult};
+use crate::package::{QueryOfferingsResult};
 
 
 const CONTRACT_NAME: &str = "Hope_Market_Place";
@@ -20,7 +20,7 @@ const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 pub fn instantiate(
     deps: DepsMut,
     _env: Env,
-    info: MessageInfo,
+    _info: MessageInfo,
     msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
@@ -293,13 +293,13 @@ fn execute_withdraw(
     nft_address:String
 ) -> Result<Response, ContractError> {
     let off = OFFERINGS.load(deps.storage,(&nft_address,&offering_id))?;
-    let state = CONFIG.load(deps.storage)?;
+   // let state = CONFIG.load(deps.storage)?;
 
     let collection_info = COLLECTIONINFO.may_load(deps.storage, &nft_address)?;
     if collection_info == None{
         return Err(ContractError::WrongNFTContractError {  })
     }
-    let collection_info = collection_info.unwrap();
+  //  let collection_info = collection_info.unwrap();
 
 
     OFFERINGS.remove(deps.storage,(&nft_address,&offering_id) );
@@ -545,10 +545,10 @@ pub fn query_get_ids(deps:Deps) -> StdResult<Vec<String>>{
 }
 
 fn parse_keys(
-    deps:Deps,
+    _deps:Deps,
     item: StdResult<(String,String)>,
 ) -> StdResult<String> {
-    item.and_then(|(address,token_id)| {
+    item.and_then(|(_address,token_id)| {
         Ok(token_id)
     })
 }
