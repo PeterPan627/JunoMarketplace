@@ -569,8 +569,14 @@ pub fn query_get_offering(deps:Deps,ids:Vec<String>,address: String) -> StdResul
 }
 
 pub fn query_get_history(deps:Deps,address:String, token_id:String) -> StdResult<Vec<SaleInfo>>{
-    let history = SALEHISTORY.load(deps.storage,(&address,&token_id))?;
-    Ok(history)
+    let history = SALEHISTORY.may_load(deps.storage,(&address,&token_id))?;
+    let empty:Vec<SaleInfo> = vec![];
+    if history == None{
+        Ok(empty)
+    } 
+    else{
+        Ok(history.unwrap())
+    }
 }
 
 #[cfg(test)]
