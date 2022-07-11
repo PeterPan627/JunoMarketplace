@@ -48,7 +48,9 @@ pub struct SaleInfo {
     pub to: String,
     pub denom:String,
     pub amount:Uint128,
-    pub time : u64
+    pub time : u64,
+    pub nft_address:String,
+    pub token_id:String
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

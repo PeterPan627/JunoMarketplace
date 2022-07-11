@@ -2,7 +2,7 @@
 use cw20::Cw20ReceiveMsg;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use crate::{state::{Asset,UserInfo, Offering, TvlInfo}, package::QueryOfferingsResult};
+use crate::{state::{Asset,UserInfo, TvlInfo}, package::QueryOfferingsResult};
 use cosmwasm_std::{Decimal};
 use cw721::Cw721ReceiveMsg;
 

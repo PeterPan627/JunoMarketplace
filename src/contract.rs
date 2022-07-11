@@ -58,7 +58,7 @@ pub fn execute(
 
 fn execute_receive_nft(
     deps: DepsMut,
-    env:Env,
+    _env:Env,
     info: MessageInfo,
     rcv_msg: Cw721ReceiveMsg,
 )-> Result<Response, ContractError> {
@@ -97,7 +97,7 @@ fn execute_receive(
     info: MessageInfo,
     rcv_msg: Cw20ReceiveMsg,
 )-> Result<Response, ContractError> {
-    let state = CONFIG.load(deps.storage)?;
+    let _state = CONFIG.load(deps.storage)?;
 
     let token_symbol = TOKENADDRESS.may_load(deps.storage, &info.sender.to_string())?;
 
@@ -204,8 +204,10 @@ fn execute_receive(
         from:off.seller.clone(),
         to: rcv_msg.sender.to_string(), 
         denom: off.list_price.denom,
-         amount: rcv_msg.amount/Uint128::new(1000000), 
-         time: env.block.time.seconds() 
+        amount: rcv_msg.amount, 
+        time: env.block.time.seconds(),
+        nft_address:msg.nft_address.clone(),
+        token_id:off.token_id.clone()
     })?;
 
     COLLECTIONINFO.update(deps.storage, &msg.nft_address, 
@@ -322,8 +324,11 @@ fn execute_buy_nft(
          from:off.seller.clone(), 
          to: info.sender.to_string(), 
          denom: off.list_price.denom.clone(),
-         amount: amount/Uint128::new(1000000), 
-         time: env.block.time.seconds() })?;
+         amount: amount, 
+         time: env.block.time.seconds(),
+         nft_address:nft_address.clone(),
+         token_id:off.token_id.clone()         
+        })?;
 
     COLLECTIONINFO.update(deps.storage, &nft_address, 
         |collection_info|->StdResult<_>{
@@ -517,11 +522,11 @@ fn execute_update_collection(
 fn execute_token_address(
     deps: DepsMut,
     _env:Env,
-    info: MessageInfo,
+    _info: MessageInfo,
     symbol:String,
     address: String,
 ) -> Result<Response, ContractError> {
-    let mut state = CONFIG.load(deps.storage)?;
+    let  state = CONFIG.load(deps.storage)?;
     deps.api.addr_validate(&address)?;
     
     TOKENADDRESS.save(deps.storage,&address,&symbol)?;
@@ -614,7 +619,7 @@ fn execute_set_tvl(
     address: String,
     tvls: Vec<TvlInfo>,
 ) -> Result<Response, ContractError> {
-    let mut state = CONFIG.load(deps.storage)?;
+    let  state = CONFIG.load(deps.storage)?;
 
     if state.owner != info.sender.to_string() {
         return Err(ContractError::Unauthorized {});
@@ -1117,7 +1122,7 @@ mod tests {
 
         let collection_info = query_collection_info(deps.as_ref(), "hope1_address".to_string()).unwrap();
         assert_eq!(collection_info.sale_id,4);
-        let sale_history = query_get_history(deps.as_ref(), "hope1_address".to_string(), vec!["1".to_string(),"2".to_string(),"3".to_string(),"4".to_string()]).unwrap();
+        let _sale_history = query_get_history(deps.as_ref(), "hope1_address".to_string(), vec!["1".to_string(),"2".to_string(),"3".to_string(),"4".to_string()]).unwrap();
         
         let tvl_all = query_all_tvl(deps.as_ref(), "hope1_address".to_string(), vec!["ujuno".to_string(),"hope".to_string(),"osmos".to_string(),"xyz".to_string()]).unwrap();
         assert_eq!(tvl_all,vec![TvlInfo{
