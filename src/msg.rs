@@ -2,7 +2,7 @@
 use cw20::Cw20ReceiveMsg;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use crate::{state::{Asset,UserInfo, TvlInfo}, package::QueryOfferingsResult};
+use crate::{state::{Asset,UserInfo, TvlInfo, SaleInfo}, package::QueryOfferingsResult};
 use cosmwasm_std::{Decimal};
 use cw721::Cw721ReceiveMsg;
 
@@ -21,12 +21,13 @@ pub enum ExecuteMsg {
  WithdrawNft{offering_id:String,nft_address:String},
  ChangeOwner{address:String},
  AddTokenAddress{symbol:String,address:String},
- AddCollection{royalty_portion:Decimal,members:Vec<UserInfo>,nft_address:String,offering_id:u64},
+ AddCollection{royalty_portion:Decimal,members:Vec<UserInfo>,nft_address:String,offering_id:u64,sale_id:u64},
  UpdateCollection{royalty_portion:Decimal,members:Vec<UserInfo>,nft_address:String},
  FixNft{address:String,token_id:String},
  SetOfferings{address:String,offering:Vec<QueryOfferingsResult>},
  SetTvl{address:String,tvl:Vec<TvlInfo>},
- Migrate{address:String,dest:String,token_id : Vec<String>}
+ Migrate{address:String,dest:String,token_id : Vec<String>},
+ SetSaleHistory{address:String,history:Vec<SaleInfo>}
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

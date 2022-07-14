@@ -46,12 +46,13 @@ pub fn execute(
     ExecuteMsg::WithdrawNft { offering_id,nft_address } => execute_withdraw(deps,env,info,offering_id,nft_address),
     ExecuteMsg::AddTokenAddress { symbol, address }  => execute_token_address(deps,env,info,symbol,address),
     ExecuteMsg::ChangeOwner { address } =>execute_change_owner(deps,env,info,address),
-    ExecuteMsg::AddCollection { royalty_portion, members,nft_address ,offering_id} =>execute_add_collection(deps,env,info,royalty_portion,members,nft_address,offering_id),
+    ExecuteMsg::AddCollection { royalty_portion, members,nft_address ,offering_id,sale_id} =>execute_add_collection(deps,env,info,royalty_portion,members,nft_address,offering_id,sale_id),
     ExecuteMsg::UpdateCollection { royalty_portion, members,nft_address } =>execute_update_collection(deps,env,info,royalty_portion,members,nft_address),
     ExecuteMsg:: FixNft{address,token_id} =>execute_fix_nft(deps,env,info,address,token_id),
     ExecuteMsg::SetOfferings { address, offering }=>execute_set_offerings(deps,env,info,address,offering),
     ExecuteMsg::SetTvl { address, tvl } =>execute_set_tvl(deps,env,info,address,tvl),
-    ExecuteMsg::Migrate { address, dest, token_id }=>execute_migrate(deps,env,info,address,dest,token_id)
+    ExecuteMsg::Migrate { address, dest, token_id }=>execute_migrate(deps,env,info,address,dest,token_id),
+    ExecuteMsg::SetSaleHistory { address, history }=>execute_history(deps,env,info,address,history)
 }
 }
 
@@ -441,7 +442,8 @@ fn execute_add_collection(
     royalty_potion: Decimal,
     members: Vec<UserInfo>,
     nft_address:String,
-    offering_id:u64
+    offering_id:u64,
+    sale_id:u64
 )->Result<Response,ContractError>{
 
     let state = CONFIG.load(deps.storage)?;
@@ -467,7 +469,7 @@ fn execute_add_collection(
     COLLECTIONINFO.save(deps.storage,&nft_address,&CollectionInfo{
         nft_address:nft_address.clone(),
         offering_id:offering_id,
-        sale_id:0,
+        sale_id:sale_id,
         royalty_portion:royalty_potion
     })?;
     Ok(Response::default())
@@ -522,12 +524,16 @@ fn execute_update_collection(
 fn execute_token_address(
     deps: DepsMut,
     _env:Env,
-    _info: MessageInfo,
+    info: MessageInfo,
     symbol:String,
     address: String,
 ) -> Result<Response, ContractError> {
     let  state = CONFIG.load(deps.storage)?;
     deps.api.addr_validate(&address)?;
+
+     if info.sender.to_string() != state.owner{
+        return Err(ContractError::Unauthorized {});
+    }
     
     TOKENADDRESS.save(deps.storage,&address,&symbol)?;
 
@@ -657,6 +663,29 @@ fn execute_set_offerings(
     Ok(Response::default())
 }
 
+
+fn execute_history(
+    deps: DepsMut,
+    _env:Env,
+    info:MessageInfo,
+    address: String,
+    histories:Vec<SaleInfo>
+) -> Result<Response, ContractError> {
+    let  state = CONFIG.load(deps.storage)?;
+
+    if state.owner != info.sender.to_string() {
+        return Err(ContractError::Unauthorized {});
+    }
+
+    let mut count = 0;
+    
+    for history in histories{
+        count =  count+1;
+        SALEHISTORY.save(deps.storage, (&address,&count.to_string()), &history)?;
+    }
+   
+    Ok(Response::default())
+}
 
 
 #[entry_point]
@@ -852,7 +881,8 @@ mod tests {
                 portion:Decimal::from_ratio(7 as u128, 10 as u128)
                 }] ,
             nft_address: "hope1_address".to_string() ,
-            offering_id:0
+            offering_id:0,
+            sale_id:0
         };
         execute(deps.as_mut(), mock_env(), info, msg).unwrap();
        
